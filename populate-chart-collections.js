@@ -252,6 +252,7 @@ function getCustomLabelsCountsByMonthYear(prs, specType) {
 }
 
 // Helper function for Graph 3: Raw GitHub Labels by month-year
+// PRs that were OPEN during that specific month-year with raw GitHub labels
 function getRawLabelsCountsByMonthYear(rawLabelsPrs, specType) {
   // Get all unique months and raw labels
   const allMonths = new Set();
@@ -268,26 +269,38 @@ function getRawLabelsCountsByMonthYear(rawLabelsPrs, specType) {
   const formattedData = [];
   const category = specType.toLowerCase() + 's';
   
-  // For each month, count PRs by raw GitHub labels
+  // For each month, count PRs that were open during that month
   sortedMonths.forEach(monthYear => {
-    const labelCounts = {};
+    // Create date range for this month
+    const [year, month] = monthYear.split('-').map(Number);
+    const monthStartDate = new Date(year, month - 1, 1); // First day of month
+    const monthEndDate = new Date(year, month, 0, 23, 59, 59, 999); // Last day of month
+    
+    const monthlyOpenCounts = {};
     
     // Initialize all labels with 0
     allRawLabels.forEach(label => {
-      labelCounts[label] = 0;
+      monthlyOpenCounts[label] = 0;
     });
     
-    // Count PRs created in this month by their raw GitHub labels
     rawLabelsPrs.forEach(pr => {
-      if (getMonthYear(pr.createdAt) === monthYear && pr.rawGithubLabels) {
+      if (!pr.rawGithubLabels) return;
+      
+      // Check if PR was open during this month
+      const prCreated = pr.createdAt <= monthEndDate; // PR existed by end of month
+      const prNotClosedYet = !pr.closedAt || pr.closedAt > monthStartDate; // Not closed before month started
+      const prNotMergedYet = !pr.mergedAt || pr.mergedAt > monthStartDate; // Not merged before month started
+      
+      // PR was open during this month if it existed and wasn't closed/merged before the month started
+      if (prCreated && prNotClosedYet && prNotMergedYet) {
         pr.rawGithubLabels.forEach(label => {
-          labelCounts[label]++;
+          monthlyOpenCounts[label]++;
         });
       }
     });
     
-    // Add each label as a separate document
-    Object.entries(labelCounts).forEach(([label, count]) => {
+    // Add monthly open counts as documents
+    Object.entries(monthlyOpenCounts).forEach(([label, count]) => {
       if (count > 0) { // Only include labels that have PRs
         formattedData.push({
           _id: `${monthYear}-${label}-${Date.now()}-${Math.random()}`,
@@ -611,7 +624,8 @@ async function main() {
     await populateCustomLabelsCollection(RIP_PR, RIPS_CUSTOM_CHARTS, 'RIP', 'ripsCustomCharts');
     await populateAllCustomCollection();
     
-    console.log(`\n=== GRAPH 3: RAW GITHUB LABELS BY MONTH ===`);
+    console.log(`\n=== GRAPH 3: RAW GITHUB LABELS (MONTHLY OPEN) ===`);
+    console.log(`   • PRs that were open during each specific month by raw label`);
     // Populate Graph 3: Raw GitHub Labels (c-update, c-new, a-review, etc.)
     await populateRawLabelsCollection(EIP_RAW_LABELS, EIPS_RAW_CHARTS, 'EIP', 'eipsRawCharts');
     await populateRawLabelsCollection(ERC_RAW_LABELS, ERCS_RAW_CHARTS, 'ERC', 'ercsRawCharts');
