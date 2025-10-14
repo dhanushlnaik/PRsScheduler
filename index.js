@@ -170,7 +170,7 @@ function runJob(scriptPath, jobName, logPrefix) {
 }
 
 async function runJobPipeline() {
-  const pipelineName = 'PR Processing Pipeline';
+  const pipelineName = 'PR & Contributor Processing Pipeline';
   const nextRun = new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleString(); // 2 hours from now
   
   logWithTimestamp(`🚀 ${pipelineName} - STARTING`, 'PIPELINE');
@@ -180,23 +180,31 @@ async function runJobPipeline() {
   
   try {
     // Step 1: Fetch PRs from GitHub
-    logWithTimestamp('📋 STEP 1/3: GitHub PR Import', 'PIPELINE');
+    logWithTimestamp('📋 STEP 1/4: GitHub PR Import', 'PIPELINE');
     logWithTimestamp('─────────────────────────────────────────────────────────', 'PIPELINE');
     await runJob('fetch-github-prs.js', 'GitHub PR Import', 'FETCH');
     
     logWithTimestamp('', 'PIPELINE');
     logWithTimestamp('─────────────────────────────────────────────────────────', 'PIPELINE');
     
-    // Step 2: Generate Snapshots
-    logWithTimestamp('📋 STEP 2/3: PR Snapshots Generation', 'PIPELINE');
+    // Step 2: Fetch Contributors from GitHub
+    logWithTimestamp('📋 STEP 2/4: GitHub Contributors Import', 'PIPELINE');
+    logWithTimestamp('─────────────────────────────────────────────────────────', 'PIPELINE');
+    await runJob('fetch-github-contributors.js', 'GitHub Contributors Import', 'CONTRIBUTORS');
+    
+    logWithTimestamp('', 'PIPELINE');
+    logWithTimestamp('─────────────────────────────────────────────────────────', 'PIPELINE');
+    
+    // Step 3: Generate Snapshots
+    logWithTimestamp('📋 STEP 3/4: PR Snapshots Generation', 'PIPELINE');
     logWithTimestamp('─────────────────────────────────────────────────────────', 'PIPELINE');
     await runJob('snapshot-open-prs.js', 'PR Snapshots Generation', 'SNAPSHOT');
     
     logWithTimestamp('', 'PIPELINE');
     logWithTimestamp('─────────────────────────────────────────────────────────', 'PIPELINE');
     
-    // Step 3: Populate Chart Collections
-    logWithTimestamp('📋 STEP 3/3: Chart Collections Population', 'PIPELINE');
+    // Step 4: Populate Chart Collections
+    logWithTimestamp('📋 STEP 4/4: Chart Collections Population', 'PIPELINE');
     logWithTimestamp('─────────────────────────────────────────────────────────', 'PIPELINE');
     await runJob('populate-chart-collections.js', 'Chart Collections Population', 'CHARTS');
     
@@ -236,14 +244,20 @@ cron.schedule('0 */2 * * *', async () => {
 // --- Startup Information ---
 
 function logStartupInfo() {
-  logWithTimestamp('🚀 PR Scheduler System Starting...', 'STARTUP');
+  logWithTimestamp('🚀 PR & Contributor Analytics Scheduler Starting...', 'STARTUP');
   logWithTimestamp('📊 Monitoring: EIPs, ERCs, RIPs repositories', 'STARTUP');
   logWithTimestamp('⏰ Schedule: Every 2 hours', 'STARTUP');
   logWithTimestamp('', 'STARTUP');
   logWithTimestamp('📅 Pipeline Execution Order:', 'STARTUP');
   logWithTimestamp('  :00 - 🔄 Step 1: Fetch PRs from GitHub API', 'STARTUP');
-  logWithTimestamp('         ⏳ Step 2: Generate historical snapshots', 'STARTUP');
-  logWithTimestamp('         ⏳ Step 3: Populate chart collections', 'STARTUP');
+  logWithTimestamp('         ⏳ Step 2: Fetch Contributors from GitHub API', 'STARTUP');
+  logWithTimestamp('         ⏳ Step 3: Generate historical snapshots', 'STARTUP');
+  logWithTimestamp('         ⏳ Step 4: Populate chart collections', 'STARTUP');
+  logWithTimestamp('', 'STARTUP');
+  logWithTimestamp('📈 Data Collection:', 'STARTUP');
+  logWithTimestamp('  • Pull Requests (status, labels, timelines)', 'STARTUP');
+  logWithTimestamp('  • Contributors (commits, additions, deletions)', 'STARTUP');
+  logWithTimestamp('  • Repository statistics & rankings', 'STARTUP');
   logWithTimestamp('', 'STARTUP');
   logWithTimestamp('🔄 Jobs run sequentially (one after another)', 'STARTUP');
   logWithTimestamp('✅ Pipeline scheduler is active and running', 'STARTUP');
