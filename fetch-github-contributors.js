@@ -1,6 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
+const fetch = require('node-fetch'); // Add fetch for Node.js compatibility
 
 // MongoDB connection
 const MONGODB_URI = process.env.OPENPRS_MONGODB_URI;
